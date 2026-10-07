@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0f16">
+<title>Shotera</title>
+<style>
+:root{--bg:#070a10;--panel:rgba(13,18,28,.82);--line:rgba(255,255,255,.12);--accent:#ffb52e;--text:#f5f7fb;--muted:#a9b2c2}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}
+.hero{min-height:100vh;position:relative;overflow:hidden;padding:26px 18px 90px;background:
+radial-gradient(circle at 75% 18%,rgba(255,181,46,.18),transparent 28%),
+radial-gradient(circle at 15% 80%,rgba(61,113,255,.15),transparent 30%),
+linear-gradient(145deg,#080b12 0%,#111927 55%,#070a10 100%)}
+.hero:before{content:"";position:absolute;width:330px;height:330px;border-radius:50%;right:-105px;top:95px;border:2px solid rgba(255,181,46,.16);box-shadow:0 0 0 28px rgba(255,181,46,.045),0 0 0 58px rgba(255,181,46,.025)}
+.hero:after{content:"";position:absolute;width:180px;height:180px;border-radius:50%;right:-30px;top:170px;background:repeating-radial-gradient(circle,transparent 0 25px,rgba(255,255,255,.05) 26px 27px)}
+.content{position:relative;z-index:2;max-width:720px;margin:auto}
+.brand{letter-spacing:.18em;font-size:12px;color:var(--accent);font-weight:800}
+h1{font-size:clamp(42px,12vw,78px);line-height:.9;margin:8px 0 12px;font-weight:900}
+.tag{color:#c5ccda;max-width:430px;font-size:15px;line-height:1.5}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:28px}
+.card{background:var(--panel);backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:0 14px 40px rgba(0,0,0,.22)}
+.label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em}.value{font-size:32px;font-weight:850;margin-top:4px}
+.btn{border:0;border-radius:15px;padding:14px 16px;font-weight:800;font-size:15px;cursor:pointer}
+.primary{background:var(--accent);color:#111}.ghost{background:rgba(255,255,255,.08);color:white;border:1px solid var(--line)}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.section{margin-top:16px}.section h2{font-size:20px;margin:0 0 10px}
+canvas{width:100%;height:190px;background:rgba(0,0,0,.16);border-radius:14px}
+.history{display:grid;gap:8px}.session{display:flex;justify-content:space-between;align-items:center;padding:12px;border-bottom:1px solid var(--line)}.session:last-child{border:0}
+small{color:var(--muted)}.rank{display:inline-flex;padding:6px 10px;border-radius:999px;background:rgba(255,181,46,.12);color:var(--accent);font-weight:800;font-size:12px}
+@media(max-width:430px){.grid{grid-template-columns:1fr 1fr}.value{font-size:27px}.hero{padding-left:14px;padding-right:14px}}
+</style>
+</head>
+<body>
+<main class="hero">
+<div class="content">
+<div class="brand">PRECISION • PROGRESS • MEMORY</div>
+<h1>Shotera</h1>
+<p class="tag">Il tuo diario personale di tiro: registra le sessioni, conserva i bersagli e misura i tuoi progressi nel tempo.</p>
+
+<div class="grid">
+<div class="card"><div class="label">Media</div><div class="value" id="avg">0.0</div><small>punti / colpo</small></div>
+<div class="card"><div class="label">Sessioni</div><div class="value" id="sessions">0</div><small>registrate</small></div>
+</div>
+
+<div class="actions">
+<button class="btn primary" onclick="newSession()">＋ Nuova sessione</button>
+<button class="btn ghost" onclick="openArchive()">Archivio</button>
+</div>
+
+<section class="section card">
+<h2>Progressi</h2>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><small>Andamento delle ultime sessioni</small><span class="rank" id="rank">Apprendista</span></div>
+<canvas id="chart" width="900" height="380"></canvas>
+</section>
+
+<section class="section card" id="archive">
+<h2>Ultime sessioni</h2>
+<div class="history" id="history"><small>Nessuna sessione ancora. Crea la prima per iniziare.</small></div>
+</section>
+</div>
+</main>
+<script>
+const KEY='shotera_sessions';
+function data(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return[]}}
+function save(x){localStorage.setItem(KEY,JSON.stringify(x))}
+function newSession(){
+ const score=Number(prompt('Punteggio della sessione (0–100):','80'));
+ if(!Number.isFinite(score)||score<0||score>100)return;
+ const a=data();a.push({date:new Date().toISOString(),score:Math.round(score*10)/10});save(a);render();
+}
+function openArchive(){document.getElementById('archive').scrollIntoView({behavior:'smooth'})}
+function rank(avg){if(avg>=90)return'Elite';if(avg>=80)return'Esperto';if(avg>=65)return'Avanzato';if(avg>=50)return'Intermedio';return'Apprendista'}
+function render(){
+ const a=data(),avg=a.length?a.reduce((s,x)=>s+x.score,0)/a.length:0;
+ document.getElementById('avg').textContent=avg.toFixed(1);document.getElementById('sessions').textContent=a.length;document.getElementById('rank').textContent=rank(avg);
+ const h=document.getElementById('history');
+ h.innerHTML=a.length?a.slice().reverse().slice(0,8).map(x=>'<div class="session"><span>'+new Date(x.date).toLocaleDateString('it-IT')+'</span><b>'+x.score.toFixed(1)+'</b></div>').join(''):'<small>Nessuna sessione ancora. Crea la prima per iniziare.</small>';
+ draw(a);
+}
+function draw(a){
+ const c=document.getElementById('chart'),ctx=c.getContext('2d'),w=c.width,h=c.height,p=44;
+ ctx.clearRect(0,0,w,h);ctx.strokeStyle='rgba(255,255,255,.10)';ctx.lineWidth=2;
+ for(let i=0;i<=4;i++){let y=p+(h-2*p)*i/4;ctx.beginPath();ctx.moveTo(p,y);ctx.lineTo(w-p,y);ctx.stroke()}
+ if(!a.length)return;
+ const vals=a.slice(-12),max=100,min=0;
+ ctx.strokeStyle='#ffb52e';ctx.lineWidth=6;ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();
+ vals.forEach((v,i)=>{let x=p+(w-2*p)*(vals.length===1?.5:i/(vals.length-1));let y=h-p-(v.score-min)/(max-min)*(h-2*p);i?ctx.lineTo(x,y):ctx.moveTo(x,y)});
+ ctx.stroke();
+}
+render();
+</script>
+</body>
+</html>
