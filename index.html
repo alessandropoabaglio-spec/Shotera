@@ -8,12 +8,8 @@
 <style>
 :root{--bg:#070a10;--panel:rgba(13,18,28,.82);--line:rgba(255,255,255,.12);--accent:#ffb52e;--text:#f5f7fb;--muted:#a9b2c2}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}
-.hero{min-height:100vh;position:relative;overflow:hidden;padding:26px 18px 90px;background:
-radial-gradient(circle at 75% 18%,rgba(255,181,46,.18),transparent 28%),
-radial-gradient(circle at 15% 80%,rgba(61,113,255,.15),transparent 30%),
-linear-gradient(145deg,#080b12 0%,#111927 55%,#070a10 100%)}
-.hero:before{content:"";position:absolute;width:330px;height:330px;border-radius:50%;right:-105px;top:95px;border:2px solid rgba(255,181,46,.16);box-shadow:0 0 0 28px rgba(255,181,46,.045),0 0 0 58px rgba(255,181,46,.025)}
-.hero:after{content:"";position:absolute;width:180px;height:180px;border-radius:50%;right:-30px;top:170px;background:repeating-radial-gradient(circle,transparent 0 25px,rgba(255,255,255,.05) 26px 27px)}
+.hero{min-height:100vh;position:relative;overflow:hidden;padding:26px 18px 90px;background-image:linear-gradient(rgba(4,7,12,.12),rgba(4,7,12,.45)),url("assets/shotera-bg.jpg");background-size:cover;background-position:center top;background-attachment:scroll}
+.hero:before{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.02),rgba(0,0,0,.20));pointer-events:none}.hero:after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 28%,transparent 0 22%,rgba(0,0,0,.08) 72%,rgba(0,0,0,.28));pointer-events:none}
 .content{position:relative;z-index:2;max-width:720px;margin:auto}
 .brand{letter-spacing:.18em;font-size:12px;color:var(--accent);font-weight:800}
 h1{font-size:clamp(42px,12vw,78px);line-height:.9;margin:8px 0 12px;font-weight:900}
@@ -45,7 +41,19 @@ small{color:var(--muted)}.rank{display:inline-flex;padding:6px 10px;border-radiu
 
 <div class="actions">
 <button class="btn primary" onclick="newSession()">＋ Nuova sessione</button>
+<button class="btn ghost" onclick="openCamera()">📷 Apri fotocamera</button>
 <button class="btn ghost" onclick="openArchive()">Archivio</button>
+<button class="btn ghost" onclick="showStats()">📈 Statistiche</button>
+</div>
+<div class="card section" style="margin-top:12px">
+<div class="label">Scansione bersaglio</div>
+<p style="margin:8px 0;color:#c5ccda;line-height:1.45">Fotografa il bersaglio, rileva i fori, controlla i punteggi e salva il risultato.</p>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<button class="btn primary" onclick="openCamera()">📷 Scansiona bersaglio</button>
+<button class="btn ghost" onclick="exportPdf()">📄 Crea PDF</button>
+</div>
+<input id="camera" type="file" accept="image/*" capture="environment" style="display:none" onchange="analyzePhoto(event)">
+<div id="scanResult" style="margin-top:12px"></div>
 </div>
 
 <section class="section card">
@@ -70,6 +78,11 @@ function newSession(){
  const a=data();a.push({date:new Date().toISOString(),score:Math.round(score*10)/10});save(a);render();
 }
 function openArchive(){document.getElementById('archive').scrollIntoView({behavior:'smooth'})}
+function openCamera(){document.getElementById('camera').click()}
+function analyzePhoto(e){const file=e.target.files?.[0];if(!file)return;const url=URL.createObjectURL(file);document.getElementById('scanResult').innerHTML='<div style="border:1px solid var(--line);border-radius:14px;padding:10px"><img src="'+url+'" style="width:100%;max-height:360px;object-fit:contain;border-radius:10px"><p style="margin:8px 0 0;color:#c5ccda">Foto acquisita. Prossimo passo: analisi automatica dei fori e calcolo dei punti.</p></div>'}
+function showStats(){document.querySelector('.section.card').scrollIntoView({behavior:'smooth'})}
+function exportPdf(){alert('Generazione PDF: la funzione sarà collegata alla scheda completa della sessione.')}
+
 function rank(avg){if(avg>=90)return'Elite';if(avg>=80)return'Esperto';if(avg>=65)return'Avanzato';if(avg>=50)return'Intermedio';return'Apprendista'}
 function render(){
  const a=data(),avg=a.length?a.reduce((s,x)=>s+x.score,0)/a.length:0;
